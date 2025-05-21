@@ -13,6 +13,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -28,20 +29,20 @@ public class WebTests {
 
     @Test
     public void testAjoutVoiture() throws Exception {
-        // Création de l'objet voiture
-        Voiture voiture = new Voiture("f", 100);
+        // Création de l'objet voiture attendu
+        Voiture expectedVoiture = new Voiture("f", 100);
 
         // Conversion de l'objet en JSON
         ObjectMapper mapper = new ObjectMapper();
-        String voitureJson = mapper.writeValueAsString(voiture);
+        String voitureJson = mapper.writeValueAsString(expectedVoiture);
 
         // Test de l'appel REST
         mockMvc.perform(post("/voiture")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(voitureJson))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(voitureJson))
                 .andExpect(status().isOk());
 
-        // Vérification que le service a bien été appelé
-        verify(statistique, times(1)).ajouter(voiture);
+        // Vérification avec eq() pour comparer le contenu de l'objet
+        verify(statistique, times(1)).ajouter(eq(expectedVoiture));
     }
 }
