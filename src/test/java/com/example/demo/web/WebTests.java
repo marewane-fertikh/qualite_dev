@@ -35,6 +35,7 @@ class WebTests {
                 .andExpect(status().isOk());
     }
 
+    // commentaire pour jacoco
     @Test
     void ajouterVoiture() throws Exception {
         mockMvc.perform(post("/voiture")
