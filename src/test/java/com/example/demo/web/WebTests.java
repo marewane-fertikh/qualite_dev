@@ -1,8 +1,8 @@
 package com.example.demo.web;
 
 import com.example.demo.data.Voiture;
+import com.example.demo.service.Echantillon;
 import com.example.demo.service.StatistiqueImpl;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -11,38 +11,48 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-public class WebTests {
-
-    @Autowired
-    private MockMvc mockMvc;
+class WebTests {
 
     @MockBean
-    private StatistiqueImpl statistique;
+    StatistiqueImpl statistiqueImpl;
+
+    @Autowired
+    MockMvc mockMvc;
 
     @Test
-    public void testAjoutVoiture() throws Exception {
-        // Création de l'objet voiture attendu
-        Voiture expectedVoiture = new Voiture("f", 100);
+    void testZeroVoiture() throws Exception {
+        mockMvc.perform(get("/statistique")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+    }
 
-        // Conversion de l'objet en JSON
-        ObjectMapper mapper = new ObjectMapper();
-        String voitureJson = mapper.writeValueAsString(expectedVoiture);
-
-        // Test de l'appel REST
+    @Test
+    void ajouterVoiture() throws Exception {
         mockMvc.perform(post("/voiture")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(voitureJson))
+                        .content("{ \"marque\": \"f\", \"prix\": 100 }")
+                        .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
+    }
 
-        // Vérification avec eq() pour comparer le contenu de l'objet
-        verify(statistique, times(1)).ajouter(eq(expectedVoiture));
+    @Test
+    public void getStatistiques() throws Exception {
+        doNothing().when(statistiqueImpl).ajouter(new Voiture("f", 100));
+        when(statistiqueImpl.prixMoyen()).thenReturn(new Echantillon(1, 100));
+        mockMvc.perform(get("/statistique"))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.nombreDeVoitures").value("1"))
+                .andExpect(jsonPath("$.prixMoyen").value("100"))
+                .andReturn();
     }
 }
