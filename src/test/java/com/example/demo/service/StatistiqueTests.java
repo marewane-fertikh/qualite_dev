@@ -45,7 +45,7 @@ public class StatistiqueTests {
         verify(statistiqueImpl, times(1)).prixMoyen();
 
     }
-
+// autre commentaire pour jacoco
     @Test void testPrisMoyenListeVide() {
         // Configuration du mock pour simuler une liste vide
         when(statistiqueImpl.prixMoyen()).thenThrow(new ArithmeticException());
